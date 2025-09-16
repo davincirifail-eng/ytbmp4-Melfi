@@ -77,12 +77,18 @@ async function safeJson(res) {
   try {
     return JSON.parse(text);
   } catch {
-    return { url: text }; // kalau ternyata string langsung
+    return { url: text }; // fallback kalau ternyata plain string
   }
 }
 
 function handleDownloadResponse(data) {
-  let url = data?.url || data?.downloadUrl || data?.result?.url || (typeof data === "string" ? data : null);
+  let url =
+    data?.url ||
+    data?.downloadUrl ||
+    data?.result?.url ||
+    data?.file || // ✅ tambahin field "file" dari API RapidAPI baru
+    (typeof data === "string" ? data : null);
+
   if (url) {
     window.open(url, "_blank");
   } else {
