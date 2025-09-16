@@ -20,7 +20,7 @@ async function getInfo() {
 
   try {
     const res = await fetch(`${API_BASE}/api/get-video-info/${id}`);
-    const data = await res.json(); // backend sudah pasti JSON
+    const data = await res.json();
     renderInfo(id, data);
   } catch (err) {
     showError("Gagal ambil info: " + err.message);
@@ -44,7 +44,7 @@ function renderInfo(id, data) {
   }
 
   html += `<div style="margin-top:10px">
-    <button onclick="downloadVideo('${id}','')">Download Otomatis</button>
+    <button onclick="downloadVideo('${id}','auto')">Download Otomatis</button>
     <button onclick="downloadShort('${id}','')">Download Shorts</button>
   </div>`;
 
@@ -53,7 +53,9 @@ function renderInfo(id, data) {
 
 async function downloadVideo(id, quality) {
   try {
-    const res = await fetch(`${API_BASE}/api/download-video/${id}${quality ? `?quality=${quality}` : ""}`);
+    // kalau quality = auto → pakai default format itag 18 (mp4 + audio)
+    const q = quality === "auto" ? "18" : quality;
+    const res = await fetch(`${API_BASE}/api/download-video/${id}${q ? `?quality=${q}` : ""}`);
     const data = await safeJson(res);
     handleDownloadResponse(data);
   } catch (err) {
@@ -77,23 +79,31 @@ async function safeJson(res) {
   try {
     return JSON.parse(text);
   } catch {
-    return { url: text }; // fallback kalau ternyata plain string
+    return { url: text };
   }
 }
 
 function handleDownloadResponse(data) {
+  console.log("Response backend:", data);
+
   let url =
     data?.url ||
     data?.downloadUrl ||
     data?.result?.url ||
-    data?.file || // ✅ tambahin field "file" dari API RapidAPI baru
+    data?.file ||
     (typeof data === "string" ? data : null);
 
   if (url) {
-    window.open(url, "_blank");
+    // buat nama file sesuai judul video
+    const title = (data.title || data.videoDetails?.title || "video").replace(/[^\w\s-]/g, "");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${title}.mp4`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   } else {
     alert("URL download tidak ditemukan. Cek console.");
-    console.log("Response backend:", data);
   }
 }
 
