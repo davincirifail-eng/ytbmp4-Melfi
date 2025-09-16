@@ -1,11 +1,12 @@
-const API_BASE = "ytbmp4-melfi-production.up.railway.app";
+// URL backend Railway (harus pakai https://)
+const API_BASE = "https://ytbmp4-melfi-production.up.railway.app";
 
 function extractId(url) {
   const v = url.match(/[?&]v=([a-zA-Z0-9_-]{6,})/);
   if (v) return v[1];
-  const short = url.match(/youtu\\.be\\/([a-zA-Z0-9_-]{6,})/);
+  const short = url.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
   if (short) return short[1];
-  const shorts = url.match(/shorts\\/([a-zA-Z0-9_-]{6,})/);
+  const shorts = url.match(/shorts\/([a-zA-Z0-9_-]{6,})/);
   if (shorts) return shorts[1];
   return url.trim();
 }
@@ -20,13 +21,14 @@ async function getInfo() {
 
   try {
     const res = await fetch(`${API_BASE}/api/get-video-info/${id}`);
-    if (!res.ok) throw new Error("Gagal ambil info");
+    if (!res.ok) throw new Error("Gagal ambil info dari backend");
     const data = await res.json();
 
     renderInfo(id, data);
   } catch (err) {
     showError(err.message);
     document.getElementById("info").innerHTML = "";
+    console.error("❌ Error getInfo:", err);
   }
 }
 
@@ -54,15 +56,25 @@ function renderInfo(id, data) {
 }
 
 async function downloadVideo(id, quality) {
-  const res = await fetch(`${API_BASE}/api/download-video/${id}${quality ? `?quality=${quality}` : ""}`);
-  const data = await res.json();
-  handleDownloadResponse(data);
+  try {
+    const res = await fetch(`${API_BASE}/api/download-video/${id}${quality ? `?quality=${quality}` : ""}`);
+    const data = await res.json();
+    handleDownloadResponse(data);
+  } catch (err) {
+    alert("Gagal download video.");
+    console.error("❌ Error downloadVideo:", err);
+  }
 }
 
 async function downloadShort(id, quality) {
-  const res = await fetch(`${API_BASE}/api/download-short/${id}${quality ? `?quality=${quality}` : ""}`);
-  const data = await res.json();
-  handleDownloadResponse(data);
+  try {
+    const res = await fetch(`${API_BASE}/api/download-short/${id}${quality ? `?quality=${quality}` : ""}`);
+    const data = await res.json();
+    handleDownloadResponse(data);
+  } catch (err) {
+    alert("Gagal download short.");
+    console.error("❌ Error downloadShort:", err);
+  }
 }
 
 function handleDownloadResponse(data) {
@@ -71,11 +83,10 @@ function handleDownloadResponse(data) {
     window.open(url, "_blank");
   } else {
     alert("URL download tidak ditemukan. Cek console.");
-    console.log(data);
+    console.log("Response backend:", data);
   }
 }
 
 function showError(msg) {
   document.getElementById("error").innerText = msg;
 }
-
