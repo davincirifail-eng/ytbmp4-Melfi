@@ -1,4 +1,4 @@
-const API_BASE = "https://NAMA-PROJECT.vercel.app"; // ganti dengan domain Vercel kamu
+const API_BASE = "https://ytbmp4-melfi-production.up.railway.app"; // domain Railway kamu
 
 function extractId(url) {
   const v = url.match(/[?&]v=([a-zA-Z0-9_-]{6,})/);
@@ -71,12 +71,13 @@ async function downloadShort(id, quality) {
   }
 }
 
+// helper: parse JSON / fallback ke text
 async function safeJson(res) {
   const text = await res.text();
   try {
     return JSON.parse(text);
   } catch {
-    return { url: text };
+    return { url: text }; 
   }
 }
 
@@ -85,7 +86,7 @@ function handleDownloadResponse(data) {
     data?.url ||
     data?.downloadUrl ||
     data?.result?.url ||
-    data?.file ||
+    data?.file || // fallback baru dari RapidAPI
     (typeof data === "string" ? data : null);
 
   if (url) {
