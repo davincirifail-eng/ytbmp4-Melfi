@@ -1,4 +1,4 @@
-const API_BASE = "https://ytbmp4-melfi-production.up.railway.app"; // pakai full URL + https
+const API_BASE = "https://NAMA-PROJECT.vercel.app"; // ganti dengan domain Vercel kamu
 
 function extractId(url) {
   const v = url.match(/[?&]v=([a-zA-Z0-9_-]{6,})/);
@@ -44,7 +44,7 @@ function renderInfo(id, data) {
   }
 
   html += `<div style="margin-top:10px">
-    <button onclick="downloadVideo('${id}','auto')">Download Otomatis</button>
+    <button onclick="downloadVideo('${id}','')">Download Otomatis</button>
     <button onclick="downloadShort('${id}','')">Download Shorts</button>
   </div>`;
 
@@ -53,9 +53,7 @@ function renderInfo(id, data) {
 
 async function downloadVideo(id, quality) {
   try {
-    // kalau quality = auto → pakai default format itag 18 (mp4 + audio)
-    const q = quality === "auto" ? "18" : quality;
-    const res = await fetch(`${API_BASE}/api/download-video/${id}${q ? `?quality=${q}` : ""}`);
+    const res = await fetch(`${API_BASE}/api/download-video/${id}${quality ? `?quality=${quality}` : ""}`);
     const data = await safeJson(res);
     handleDownloadResponse(data);
   } catch (err) {
@@ -73,7 +71,6 @@ async function downloadShort(id, quality) {
   }
 }
 
-// ✅ helper untuk handle JSON atau text
 async function safeJson(res) {
   const text = await res.text();
   try {
@@ -84,8 +81,6 @@ async function safeJson(res) {
 }
 
 function handleDownloadResponse(data) {
-  console.log("Response backend:", data);
-
   let url =
     data?.url ||
     data?.downloadUrl ||
@@ -94,16 +89,10 @@ function handleDownloadResponse(data) {
     (typeof data === "string" ? data : null);
 
   if (url) {
-    // buat nama file sesuai judul video
-    const title = (data.title || data.videoDetails?.title || "video").replace(/[^\w\s-]/g, "");
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${title}.mp4`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    window.open(url, "_blank");
   } else {
     alert("URL download tidak ditemukan. Cek console.");
+    console.log("Response backend:", data);
   }
 }
 
