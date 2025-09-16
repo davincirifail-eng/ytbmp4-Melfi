@@ -1,5 +1,4 @@
-// URL backend Railway (harus pakai https://)
-const API_BASE = "https://ytbmp4-melfi-production.up.railway.app";
+const API_BASE = "https://ytbmp4-melfi-production.up.railway.app"; // pakai full URL + https
 
 function extractId(url) {
   const v = url.match(/[?&]v=([a-zA-Z0-9_-]{6,})/);
@@ -21,14 +20,11 @@ async function getInfo() {
 
   try {
     const res = await fetch(`${API_BASE}/api/get-video-info/${id}`);
-    if (!res.ok) throw new Error("Gagal ambil info dari backend");
-    const data = await res.json();
-
+    const data = await res.json(); // backend sudah pasti JSON
     renderInfo(id, data);
   } catch (err) {
-    showError(err.message);
+    showError("Gagal ambil info: " + err.message);
     document.getElementById("info").innerHTML = "";
-    console.error("❌ Error getInfo:", err);
   }
 }
 
@@ -58,22 +54,30 @@ function renderInfo(id, data) {
 async function downloadVideo(id, quality) {
   try {
     const res = await fetch(`${API_BASE}/api/download-video/${id}${quality ? `?quality=${quality}` : ""}`);
-    const data = await res.json();
+    const data = await safeJson(res);
     handleDownloadResponse(data);
   } catch (err) {
-    alert("Gagal download video.");
-    console.error("❌ Error downloadVideo:", err);
+    alert("Error download video: " + err.message);
   }
 }
 
 async function downloadShort(id, quality) {
   try {
     const res = await fetch(`${API_BASE}/api/download-short/${id}${quality ? `?quality=${quality}` : ""}`);
-    const data = await res.json();
+    const data = await safeJson(res);
     handleDownloadResponse(data);
   } catch (err) {
-    alert("Gagal download short.");
-    console.error("❌ Error downloadShort:", err);
+    alert("Error download short: " + err.message);
+  }
+}
+
+// ✅ helper untuk handle JSON atau text
+async function safeJson(res) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { url: text }; // kalau ternyata string langsung
   }
 }
 
